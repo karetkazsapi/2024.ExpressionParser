@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+<textarea id="source">
+
+class: center, middle
+
+# Hand crafting an expression evaluator
+
+---
+# About
+
+## Karetka Mezei Zoltan
+### Work at: [3ss](https://www.3ss.tv)
+
+#### Presented technique used in two different projects
+
+1. Transform user input directly to sql where clause
+2. Wifi strength checker for high quality video playback
+
+```properties
+wifi.check.expression=(Num.Pkt.Lost - Num.Fix.By.Ret <= 0) && (avg(rssi) > -70)
+wifi.check.measure.interval=10
+```
+
+https://github.com/karetkaz/ExpressionParser
+
+---
+# Agenda
+
+1. Lexer
+  * Input
+  * Delimiters
+  * Tokens
+
+2. Parser
+  * Abstract syntax tree
+  * Operators Precedence
+  * Precedence climbing
+
+3. Evaluation
+
+---
+# Input
+
+### Input is a sequence of characters
+
+* string / file / network
+* text encoding
+* white spaces
+* delimiters
+
+---
+# Tokens
+
+### Tokens are grouped region of characters with meaning
+
+* keyword
+* operator
+* identifier
+* literals
+* punctuation
+
+---
+# Token examples
+
+|         example |      | token                  |
+|----------------:|:----:|:-----------------------|
+|                 | <br> |                        |
+|           `for` |  ->  | keyword_for            |
+|             `+` |  ->  | operator_add           |
+|           `>>>` |  ->  | operator_sar           |
+|        `printf` |  ->  | identifier (azonosító) |
+|          `3649` |  ->  | decimal_integer        |
+|        `3.1415` |  ->  | decimal_float          |
+|       `0x1fa34` |  ->  | hexadecimal_integer    |
+|      `0x1.fp-2` |  ->  | hexadecimal_float      |
+|           `'a'` |  ->  | character_literal      |
+| `"hello world"` |  ->  | string_literal         |
+|         `37fa9` |  ->  | **error**              |
+|       `3.14.15` |  ->  | **error**              |
+|        `0xyz23` |  ->  | **error**              |
+|       `"hello'` |  ->  | **error**              |
+
+---
+# Lexer
+
+### Input: `1 - x * x - y * y / 2`
+
+* token: `Value`, position: 0, text: `1`
+* token: `Sub`, position: 2, text: `-`
+* token: `Value`, position: 4, text: `x`
+* token: `Mul`, position: 6, text: `*`
+* token: `Value`, position: 8, text: `x`
+* token: `Sub`, position: 10, text: `-`
+* token: `Value`, position: 12, text: `y`
+* token: `Mul`, position: 14, text: `*`
+* token: `Value`, position: 16, text: `y`
+* token: `Div`, position: 18, text: `/`
+* token: `Value`, position: 20, text: `2`
+
+---
+# Parsers
+
+### Hand crafted parser algorithms
+* Top-Down operator precedence
+* Recursive descent parsers
+* Precedence climbing
+* Shunting Yard
+
+### Generated parser algorithms
+* LL
+* LR
+* PEG
+
+---
+# Abstract syntax tree
+
+### Expression: `1 - x * x - y * y / 2`
+```txt
+            (-)
+          /     \
+       (-)       (/)
+      /  \       /  \
+     1   (*)    (*)  2
+         / \    / \
+        x   x  y   y
+```
+https://astexplorer.net
+
+---
+# Operators Precedence
+
+### Precedence: `1 + 2 * 3`
+```txt
+1 + (2 * 3)            |            (1 + 2) * 3
+                       |
+        (+)            |            (*)
+        / \            |            / \
+       1  (*)          |          (+)  3
+          / \          |          / \
+         2   3         |         1   2
+```
+
+### Associativity: '`8 / 4 / 2`' vs '`a = b = c`'
+
+```txt
+(8 / 4) / 2             a = (b = c)
+
+        (/)             (=)
+        / \             / \
+      (/)  2           a  (=)
+      / \                 / \
+     8   4               b   c
+```
+
+[C operator precedence table](https://en.cppreference.com/w/c/language/operator_precedence)
+
+---
+# Evaluation
+
+## Recursive evaluation of the abstract syntax tree
+
+### Example: '`8 / 4 * 2 - 1`'
+
+```txt
+          (-)      |          (-)      |          (-)      |          [3]
+          / \      |          / \      |          / \      |
+        (*)  1     |        (*)  1     |        [4]  1     |
+        / \        |        / \        |                   |
+      (/)  2       |      [2]  2       |                   |
+      / \          |                   |                   |
+     8   4         |                   |                   |
+```
+
+---
+class: center, middle
+
+# Thank you
+
+<!--* https://github.com/gnab/remark-->
+
+[//]: # (https://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing)
+[//]: # (https://craftinginterpreters.com/parsing-expressions.html)
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
