@@ -1,22 +1,36 @@
 public class Parser {
 
-	public static Node parse(String text) {
-		Lexer lexer = new Lexer(text);
+	public static Node parseAll(Lexer lexer) throws Error {
 		Node node = parseBinary(lexer, 0);
 		if (lexer.hasNext()) {
-			throw new Error("End of input expected");
+			throw new Error("End of input expected, got", lexer.nextToken(), lexer);
 		}
 		return node;
 	}
 
-	public static Node parseUnary(Lexer lexer) {
+	private static Node parseUnary(Lexer lexer) throws Error {
 		Lexer.Token token = lexer.nextToken();
 		if (token == Lexer.Token.Value) {
 			return new Node(token, lexer.getPosition(), lexer.getText());
 		}
 
 		if (!token.isUnary()) {
-			throw new Error("Unary operator expected");
+			throw new Error("Unary operator expected", token, lexer);
+		}
+
+		if (token == Lexer.Token.Fun) {
+			if (lexer.nextToken() == Lexer.Token.RParen) {
+				// allow empty list arguments: '(' ')'
+				return new Node(token, lexer.getPosition(), lexer.getText());
+			}
+
+			lexer.backToken();
+			Node fun = new Node(token, lexer.getPosition(), lexer.getText());
+			fun.right = parseBinary(lexer, 0);
+			if (lexer.nextToken() != Lexer.Token.RParen) {
+				throw new Error("Right parenthesis expected, got", token, lexer);
+			}
+			return fun;
 		}
 
 		Node root = new Node(token, lexer.getPosition(), lexer.getText());
@@ -24,27 +38,43 @@ public class Parser {
 		return root;
 	}
 
-	public static Node parseBinary(Lexer lexer, int minPrecedence) {
+	private static Node parseBinary(Lexer lexer, int minPrecedence) throws Error {
 		Node root = parseUnary(lexer);
 		while (lexer.hasNext()) {
 			Lexer.Token token = lexer.nextToken();
-			if (!token.isBinary()) {
-				throw new Error("Binary operator expected, got: " + token);
+			switch (token) {
+				case Undefined:
+				case RParen:
+					lexer.backToken();
+					return root;
 			}
+
+			if (!token.isBinary()) {
+				throw new Error("Binary operator expected, got", token, lexer);
+			}
+
 			if (token.precedence <= minPrecedence) {
 				if (token.precedence < minPrecedence) {
-					lexer.back();
+					lexer.backToken();
 					break;
 				}
 				if (!token.right2left) {
-					lexer.back();
+					lexer.backToken();
 					break;
 				}
 			}
-			Node node = new Node(token, lexer.getPosition(), lexer.getText());
-			node.right = parseBinary(lexer, token.precedence);
-			node.left = root;
-			root = node;
+
+			if (token == Lexer.Token.Fun) {
+				lexer.backToken();
+				Node node = parseUnary(lexer);
+				node.left = root;
+				root = node;
+			} else {
+				Node node = new Node(token, lexer.getPosition(), lexer.getText());
+				node.right = parseBinary(lexer, token.precedence);
+				node.left = root;
+				root = node;
+			}
 		}
 
 		return root;

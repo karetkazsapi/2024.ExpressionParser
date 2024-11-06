@@ -4,8 +4,8 @@ public class Lexer {
 	private final String input;
 
 	private int previous = -1;
-	private int start;
-	private int end;
+	private int start = 0;
+	private int end = 0;
 
 	public Lexer(String input) {
 		this.input = input;
@@ -66,11 +66,23 @@ public class Lexer {
 		return Token.Undefined;
 	}
 
+	public void backToken() throws Error {
+		if (previous < 0) {
+			throw new Error("can not push back: ", Token.Undefined, this);
+		}
+		end = start;
+		start = previous;
+		previous = -1;
+	}
+
 	public int getPosition() {
 		return start;
 	}
 
 	public String getText() {
+		if (end > input.length()) {
+			return "";
+		}
 		return input.substring(start, end);
 	}
 
@@ -82,22 +94,30 @@ public class Lexer {
 		return c < delimiters.length && delimiters[c];
 	}
 
-	public void back() {
-		if (previous < 0) {
-			throw new Error("can not go back");
-		}
-		end = start;
-		start = previous;
-		previous = -1;
-	}
-
 	public enum Token {
-		Pow(14, true, "**"),
+		Fun(15, false, "("),
+
 		Mul(13, false, "*"),
-		Div(13, false,"/"),
-		Add(12, false,"+"),
-		Sub(12, false,"-"),
+		Div(13, false, "/"),
+		Rem(13, false, "%"),
+
+		Add(12, false, "+"),
+		Sub(12, false, "-"),
+
+		Lt(10, false, "<"),
+		Leq(10, false, "<="),
+		Gt(10, false, ">"),
+		Geq(10, false, ">="),
+
+		All(5, false, "&&"),
+		Any(4, false, "||"),
+
+		Set(2, true, "="),
+
+		Coma(1, false, ","),
+
 		Value(0, false, null),
+		RParen(0, false, ")"),
 		Undefined(0, false, null);
 
 		public final int precedence;
@@ -111,11 +131,25 @@ public class Lexer {
 		}
 
 		public boolean isUnary() {
-			return this == Add || this == Sub;
+			// allow some operators to behave as unary, the left branch will be null
+			switch (this) {
+				case Fun: // (3 + x) * min(x, y)
+				case Add: // +9
+				case Sub: // -9
+					return true;
+			}
+			return false;
 		}
 
 		public boolean isBinary() {
-			return this != Value && this != Undefined;
+			// disallow some tokens to be used as (binary) operators
+			switch (this) {
+				case Value:
+				case RParen:
+				case Undefined:
+					return false;
+			}
+			return true;
 		}
 	}
 }
