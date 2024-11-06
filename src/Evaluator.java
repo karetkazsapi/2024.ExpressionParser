@@ -4,14 +4,14 @@ public class Evaluator {
 
 	double value(Parser.Node node) throws Error {
 		try {
-			return Double.parseDouble(node.text);
+			return Double.parseDouble(node.getText());
 		} catch (NumberFormatException e) {
 			throw new Error("Invalid value", node, e);
 		}
 	}
 
 	double function(Parser.Node node, double[] arguments) throws Error {
-		switch (node.text) {
+		switch (node.getText()) {
 			case "min": {
 				if (arguments.length < 1) {
 					throw new Error("At least one argument expected", node);
@@ -87,103 +87,103 @@ public class Evaluator {
 
 	public double evaluate(Parser.Node node) throws Error {
 		double left, right;
-		switch (node.token) {
+		switch (node.getToken()) {
 			case Value:
 				return value(node);
 
 			case Fun:
-				if (node.left == null && node.right == null) {
+				if (node.getLeft() == null && node.getRight() == null) {
 					// ()
 					throw new Error("Invalid function call", node);
 				}
 
-				if (node.left == null) {
+				if (node.getLeft() == null) {
 					// (3 + 2)
-					return evaluate(node.right);
+					return evaluate(node.getRight());
 				}
 
 				double[] args = EMPTY_ARGS;
-				if (node.right != null) {
+				if (node.getRight() != null) {
 					int length = 1;
-					for (Parser.Node arg = node.right; arg.token == Lexer.Token.Coma; arg = arg.left) {
+					for (Parser.Node arg = node.getRight(); arg.getToken() == Lexer.Token.Coma; arg = arg.getLeft()) {
 						length += 1;
 					}
 					args = new double[length];
-					Parser.Node arg = node.right;
-					while (arg.token == Lexer.Token.Coma) {
-						args[length -= 1] = evaluate(arg.right);
-						arg = arg.left;
+					Parser.Node arg = node.getRight();
+					while (arg.getToken() == Lexer.Token.Coma) {
+						args[length -= 1] = evaluate(arg.getRight());
+						arg = arg.getLeft();
 					}
 					args[0] = evaluate(arg);
 				}
-				return function(node.left, args);
+				return function(node.getLeft(), args);
 
 			case Mul:
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left * right;
 
 			case Div:
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left / right;
 
 			case Rem:
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left % right;
 
 			case Add:
-				if (node.left == null) {
+				if (node.getLeft() == null) {
 					// unary +
-					return +evaluate(node.right);
+					return +evaluate(node.getRight());
 				}
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left + right;
 
 			case Sub:
-				if (node.left == null) {
+				if (node.getLeft() == null) {
 					// unary -
-					return -evaluate(node.right);
+					return -evaluate(node.getRight());
 				}
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left - right;
 
 			case Lt:
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left < right ? 1 : 0;
 
 			case Leq:
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left <= right ? 1 : 0;
 
 			case Gt:
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left > right ? 1 : 0;
 
 			case Geq:
-				left = evaluate(node.left);
-				right = evaluate(node.right);
+				left = evaluate(node.getLeft());
+				right = evaluate(node.getRight());
 				return left >= right ? 1 : 0;
 
 			case All:
-				left = evaluate(node.left);
+				left = evaluate(node.getLeft());
 				if (left == 0) {
 					return left;
 				}
-				return evaluate(node.right);
+				return evaluate(node.getRight());
 
 			case Any:
-				left = evaluate(node.left);
+				left = evaluate(node.getLeft());
 				if (left != 0) {
 					return left;
 				}
-				return evaluate(node.right);
+				return evaluate(node.getRight());
 		}
 		throw new Error("Invalid operation", node);
 	}

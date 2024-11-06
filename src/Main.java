@@ -30,27 +30,27 @@ public class Main {
 		if (node == null) {
 			return;
 		}
-		if (node.left == null && node.right == null) {
-			out.append(node.text);
+		if (node.getLeft() == null && node.getRight() == null) {
+			out.append(node.getText());
 			return;
 		}
 		out.append('(');
-		if (node.left != null) {
-			print(out, node.left);
+		if (node.getLeft() != null) {
+			print(out, node.getLeft());
 			out.append(' ');
 		}
-		switch (node.token) {
+		switch (node.getToken()) {
 			case Fun:
 				out.append("()");
 				break;
 
 			default:
-				out.append(node.text);
+				out.append(node.getText());
 				break;
 		}
-		if (node.right != null) {
+		if (node.getRight() != null) {
 			out.append(' ');
-			print(out, node.right);
+			print(out, node.getRight());
 		}
 		out.append(')');
 	}

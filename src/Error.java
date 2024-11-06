@@ -9,11 +9,11 @@ public class Error extends Exception {
 	}
 
 	public Error(String message, Parser.Node node) {
-		this(message, node.token, node.position, node.text);
+		this(message, node.getToken(), node.getPosition(), node.getText());
 	}
 
 	public Error(String message, Parser.Node node, Throwable cause) {
-		this(message, node.token, node.position, node.text);
+		this(message, node.getToken(), node.getPosition(), node.getText());
 		initCause(cause);
 	}
 }

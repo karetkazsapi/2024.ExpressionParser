@@ -14,32 +14,32 @@ class ImageEvaluator extends Evaluator {
 
 	@Override
 	public double value(Parser.Node node) throws Error {
-		if (node.text.length() == 1) {
-			return vars[node.text.charAt(0)];
+		if (node.getText().length() == 1) {
+			return vars[node.getText().charAt(0)];
 		}
 		return super.value(node);
 	}
 
 	@Override
 	public double evaluate(Parser.Node node) throws Error {
-		switch (node.token) {
+		switch (node.getToken()) {
 			case Set:
-				if (node.left.token != Lexer.Token.Value) {
+				if (node.getLeft().getToken() != Lexer.Token.Value) {
 					throw new Error("set can only modify variables", node);
 				}
-				if (node.left.text.length() != 1) {
-					throw new Error("variables can be single characters", node.left);
+				if (node.getLeft().getText().length() != 1) {
+					throw new Error("variables can be single characters", node.getLeft());
 				}
-				char chr = node.left.text.charAt(0);
+				char chr = node.getLeft().getText().charAt(0);
 				if (chr >= '0' && chr <= '9') {
-					throw new Error("variables can not be numbers", node.left);
+					throw new Error("variables can not be numbers", node.getLeft());
 				}
-				return vars[chr] = evaluate(node.right);
+				return vars[chr] = evaluate(node.getRight());
 
 			case Coma:
 				// enable chain of expressions, returning the value of the last one
-				evaluate(node.left);
-				return evaluate(node.right);
+				evaluate(node.getLeft());
+				return evaluate(node.getRight());
 		}
 
 		return super.evaluate(node);

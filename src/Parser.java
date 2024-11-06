@@ -81,17 +81,37 @@ public class Parser {
 	}
 
 	public static class Node {
-		public final Lexer.Token token;
-		public final int position;
-		public final String text;
+		private final Lexer.Token token;
+		private final int position;
+		private final String text;
 
-		public Node left;
-		public Node right;
+		private Node left;
+		private Node right;
 
 		public Node(Lexer.Token token, int position, String text) {
 			this.token = token;
 			this.position = position;
 			this.text = text;
+		}
+
+		public Lexer.Token getToken() {
+			return token;
+		}
+
+		public int getPosition() {
+			return position;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public Node getLeft() {
+			return left;
+		}
+
+		public Node getRight() {
+			return right;
 		}
 	}
 }
